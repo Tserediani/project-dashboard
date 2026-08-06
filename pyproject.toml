@@ -1,0 +1,41 @@
+[project]
+name = "project-dashboard"
+version = "0.1.0"
+description = "A multi-tenant backend service to create, update, share, and delete project information (metadata, details, and attached documents)."
+readme = "README.md"
+authors = [{ name = "Giorgi Tserediani", email = "tserediani.g@gmail.com" }]
+requires-python = ">=3.14"
+dependencies = [
+    "aioboto3>=15.5.0",
+    "alembic>=1.19.0",
+    "argon2-cffi>=25.1.0",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.141.1",
+    "pydantic-settings>=2.14.2",
+    "pydantic[email]>=2.13.4",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.32",
+    "slowapi>=0.1.10",
+    "sqlalchemy[asyncio]>=2.0.51",
+    "structlog>=26.1.0",
+    "uvicorn[standard]>=0.52.1",
+]
+
+[project.scripts]
+project-dashboard = "project_dashboard:main"
+
+[build-system]
+requires = ["uv_build>=0.12.2,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "moto>=5.2.2",
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
+    "rich>=15.0.0",
+    "ruff>=0.16.1",
+]
