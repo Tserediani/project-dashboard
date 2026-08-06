@@ -39,3 +39,6 @@ dev = [
     "rich>=15.0.0",
     "ruff>=0.16.1",
 ]
+
+[tool.mypy]
+plugins = ['pydantic.mypy']
