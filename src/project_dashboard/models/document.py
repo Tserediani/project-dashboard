@@ -11,7 +11,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from project_dashboard.models.base import Base
+from project_dashboard.db.base import Base
 
 if TYPE_CHECKING:
     from project_dashboard.models.project import Project
