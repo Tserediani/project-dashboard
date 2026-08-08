@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from project_dashboard.config import CONFIG
+from project_dashboard.core.config import CONFIG
 
 engine: AsyncEngine = create_async_engine(url=CONFIG.postgres.dsn)
 

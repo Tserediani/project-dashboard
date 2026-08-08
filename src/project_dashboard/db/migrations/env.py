@@ -4,7 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 import project_dashboard.models  # noqa: F401
-from project_dashboard.config import CONFIG
+from project_dashboard.core.config import CONFIG
 from project_dashboard.db.base import Base
 
 # this is the Alembic Config object, which provides
