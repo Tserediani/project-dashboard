@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+from jose.utils import base64url_decode, base64url_encode
 
 from project_dashboard.core.exceptions import InvalidTokenError
 from project_dashboard.core.security import (
@@ -71,7 +72,14 @@ def test_decode_access_token_raises_invalid_token_error_on_tampered_token():
     subject = "123"
 
     token = create_access_token(subject)
-    tampered_token = token[:-1] + ("a" if token[-1] != "a" else "b")
+    header, payload, signature = token.split(".")
+
+    payload_bytes = bytearray(base64url_decode(payload.encode()))
+    payload_bytes[0] ^= 1
+
+    tampered_payload = base64url_encode(bytes(payload_bytes)).decode()
+
+    tampered_token = f"{header}.{tampered_payload}.{signature}"
 
     with pytest.raises(InvalidTokenError):
         decode_access_token(tampered_token)
