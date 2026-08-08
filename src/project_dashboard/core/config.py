@@ -10,13 +10,16 @@ class PostgresConfig(BaseModel):
     password: Secret[str]
     db: Secret[str]
 
-    @property
-    def dsn(self) -> str:
+    def dsn_for(self, db_name: str) -> str:
         return (
             f"{self.protocol}://{self.user.get_secret_value()}:"
             f"{self.password.get_secret_value()}@{self.host}:"
-            f"{self.port}/{self.db.get_secret_value()}"
+            f"{self.port}/{db_name}"
         )
+
+    @property
+    def dsn(self) -> str:
+        return self.dsn_for(self.db.get_secret_value())
 
 
 class JWTConfig(BaseModel):
