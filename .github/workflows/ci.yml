@@ -5,6 +5,20 @@ on: [push, pull_request]
 jobs:
     ci-checks:
         runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: postgres
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: project_dashboard_ci
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U postgres"
+                    --health-interval 5s
+                    --health-timeout 5s
+                    --health-retries 5
         steps:
             - uses: actions/checkout@v4
 
@@ -19,7 +33,7 @@ jobs:
               run: uv sync --all-groups
 
             - name: Create test environment
-              run: cp .env.example .env
+              run: cp .env.test .env
 
             - name: Run Ruff Checks
               run: |
