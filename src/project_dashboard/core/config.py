@@ -19,6 +19,11 @@ class PostgresConfig(BaseModel):
         )
 
 
+class JWTConfig(BaseModel):
+    secret_key: Secret[str]
+    algorithm: str
+
+
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -28,6 +33,7 @@ class AppConfig(BaseSettings):
     )
 
     postgres: PostgresConfig
+    jwt: JWTConfig
 
 
 CONFIG = AppConfig()
