@@ -8,6 +8,7 @@ from project_dashboard.core.config import CONFIG
 from project_dashboard.db.base import Base
 from project_dashboard.db.session import get_session
 from project_dashboard.main import app
+from tests.helpers import AuthUserFactory, FakeUser
 
 TEST_DATABASE_NAME = f"{CONFIG.postgres.db.get_secret_value()}_test"
 
@@ -60,3 +61,26 @@ async def client(db_session: AsyncSession):
             yield ac
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def auth_user_factory(
+    client: AsyncClient,
+) -> AuthUserFactory:
+    async def _auth_user(email: str, password: str = "password!123") -> FakeUser:
+        register_response = await client.post(
+            "/auth",
+            json={"email": email, "password": password, "repeat_password": password},
+        )
+        register_response.raise_for_status()
+        login_response = await client.post(
+            "/login", data={"username": email, "password": password}
+        )
+        login_response.raise_for_status()
+        token = login_response.json()["access_token"]
+        user = FakeUser(
+            **register_response.json(), access_token=token, password=password
+        )
+        return user
+
+    return _auth_user
