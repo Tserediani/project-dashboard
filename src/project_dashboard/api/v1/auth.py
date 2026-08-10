@@ -1,12 +1,13 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from project_dashboard.db.session import get_session
 from project_dashboard.repositories.user_repository import UserRepository
 from project_dashboard.schemas.token import TokenResponse
-from project_dashboard.schemas.user import LoginRequest, RegisterRequest, UserRead
+from project_dashboard.schemas.user import RegisterRequest, UserRead
 from project_dashboard.services.auth_service import AuthService
 
 router = APIRouter(tags=["auth"])
@@ -24,8 +25,9 @@ async def register(
 
 @router.post("/login", response_model=TokenResponse)
 async def login(
-    payload: LoginRequest, session: Annotated[AsyncSession, Depends(get_session)]
+    payload: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     service = AuthService(UserRepository(session))
-    token = await service.authenticate(payload.email, payload.password)
+    token = await service.authenticate(payload.username, payload.password)
     return TokenResponse(access_token=token, token_type="bearer")

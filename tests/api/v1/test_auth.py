@@ -65,7 +65,7 @@ async def test_login_success(client: AsyncClient):
     await client.post("/auth", json=payload)
 
     response = await client.post(
-        "/login", json={"email": "test@example.com", "password": "password!123"}
+        "/login", data={"username": "test@example.com", "password": "password!123"}
     )
     body = response.json()
 
@@ -82,7 +82,7 @@ async def test_login_wrong_password_fails(client: AsyncClient):
     await client.post("/auth", json=payload)
 
     response = await client.post(
-        "/login", json={"email": "test@example.com", "password": "wrong-password"}
+        "/login", data={"username": "test@example.com", "password": "wrong-password"}
     )
 
     assert response.status_code == 403
@@ -90,7 +90,7 @@ async def test_login_wrong_password_fails(client: AsyncClient):
 
 async def test_login_nonexistent_user_fails(client: AsyncClient):
     response = await client.post(
-        "/login", json={"email": "test@example.com", "password": "wrong-password"}
+        "/login", data={"username": "test@example.com", "password": "wrong-password"}
     )
 
     assert response.status_code == 403
