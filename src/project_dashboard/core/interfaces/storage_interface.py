@@ -1,0 +1,9 @@
+from typing import Protocol
+
+
+class StorageService(Protocol):
+    async def upload(self, key: str, content: bytes, content_type: str) -> None: ...
+
+    async def generate_presigned_url(self, key: str, expires_in: int) -> str: ...
+
+    async def delete(self, key: str) -> None: ...

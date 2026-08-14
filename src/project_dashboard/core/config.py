@@ -27,6 +27,10 @@ class JWTConfig(BaseModel):
     algorithm: str
 
 
+class DocumentConfig(BaseModel):
+    max_project_storage_bytes: int
+
+
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -37,6 +41,7 @@ class AppConfig(BaseSettings):
 
     postgres: PostgresConfig
     jwt: JWTConfig
+    document: DocumentConfig
 
 
 CONFIG = AppConfig()
