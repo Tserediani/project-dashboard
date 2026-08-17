@@ -1,9 +1,11 @@
 from httpx import AsyncClient
 
+PREFIX = "/auth"
+
 
 async def test_register_new_user(client: AsyncClient):
     response = await client.post(
-        "/auth",
+        f"{PREFIX}/register",
         json={
             "email": "test@example.com",
             "password": "password!123",
@@ -24,9 +26,9 @@ async def test_register_duplicate_email_fails(client: AsyncClient):
         "repeat_password": "password!123",
     }
 
-    await client.post("/auth", json=payload)
+    await client.post(f"{PREFIX}/register", json=payload)
 
-    response = await client.post("/auth", json=payload)
+    response = await client.post(f"{PREFIX}/register", json=payload)
 
     assert response.status_code == 409
 
@@ -38,14 +40,14 @@ async def test_register_password_mismatch_fails(client: AsyncClient):
         "repeat_password": "password123",
     }
 
-    response = await client.post("/auth", json=payload)
+    response = await client.post(f"{PREFIX}/register", json=payload)
 
     assert response.status_code == 422
 
 
 async def test_register_invalid_email_fails(client: AsyncClient):
     response = await client.post(
-        "/auth",
+        f"{PREFIX}/register",
         json={
             "email": "not-an-email",
             "password": "password!123",
@@ -62,10 +64,11 @@ async def test_login_success(client: AsyncClient):
         "password": "password!123",
         "repeat_password": "password!123",
     }
-    await client.post("/auth", json=payload)
+    await client.post(f"{PREFIX}/register", json=payload)
 
     response = await client.post(
-        "/login", data={"username": "test@example.com", "password": "password!123"}
+        f"{PREFIX}/login",
+        data={"username": "test@example.com", "password": "password!123"},
     )
     body = response.json()
 
@@ -79,10 +82,11 @@ async def test_login_wrong_password_fails(client: AsyncClient):
         "password": "password!123",
         "repeat_password": "password!123",
     }
-    await client.post("/auth", json=payload)
+    await client.post(f"{PREFIX}/register", json=payload)
 
     response = await client.post(
-        "/login", data={"username": "test@example.com", "password": "wrong-password"}
+        f"{PREFIX}/login",
+        data={"username": "test@example.com", "password": "wrong-password"},
     )
 
     assert response.status_code == 403
@@ -90,7 +94,8 @@ async def test_login_wrong_password_fails(client: AsyncClient):
 
 async def test_login_nonexistent_user_fails(client: AsyncClient):
     response = await client.post(
-        "/login", data={"username": "test@example.com", "password": "wrong-password"}
+        f"{PREFIX}/login",
+        data={"username": "test@example.com", "password": "wrong-password"},
     )
 
     assert response.status_code == 403

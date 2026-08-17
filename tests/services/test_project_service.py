@@ -4,53 +4,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from project_dashboard.core.exceptions import ConflictError, NotFoundError
-from project_dashboard.models import Project, ProjectRole, User
-from project_dashboard.repositories.project_access_repository import (
-    ProjectAccessRepository,
-)
-from project_dashboard.repositories.project_repository import ProjectRepository
-from project_dashboard.repositories.user_repository import UserRepository
+from project_dashboard.models import ProjectRole
 from project_dashboard.services.project_service import ProjectService
-
-
-@pytest.fixture
-def project_repo() -> AsyncMock:
-    return AsyncMock(spec=ProjectRepository)
-
-
-@pytest.fixture
-def project_access_repo() -> AsyncMock:
-    return AsyncMock(spec=ProjectAccessRepository)
-
-
-@pytest.fixture
-def user_repo() -> AsyncMock:
-    return AsyncMock(spec=UserRepository)
-
-
-@pytest.fixture
-def project_service(
-    project_repo: AsyncMock,
-    project_access_repo: AsyncMock,
-    user_repo: AsyncMock,
-) -> ProjectService:
-    return ProjectService(project_repo, user_repo, project_access_repo)
-
-
-@pytest.fixture
-def owner() -> MagicMock:
-    user = MagicMock(spec=User)
-    user.id = uuid.uuid4()
-    return user
-
-
-@pytest.fixture
-def fake_project() -> MagicMock:
-    project = MagicMock(spec=Project)
-    project.id = uuid.uuid4()
-    project.name = "My Project"
-    project.description = "Some Description"
-    return project
 
 
 async def test_create_project_creates_owner_access(

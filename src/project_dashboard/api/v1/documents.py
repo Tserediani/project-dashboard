@@ -19,7 +19,7 @@ from project_dashboard.schemas.document import (
 )
 from project_dashboard.services.document_service import DocumentService
 
-router = APIRouter()
+router = APIRouter(tags=["documents"])
 
 
 @router.post(
@@ -47,7 +47,7 @@ async def upload_document(
 
 
 @router.get("/projects/{project_id}/documents", response_model=list[DocumentRead])
-async def get_documents(
+async def list_documents(
     project_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_project_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
@@ -56,7 +56,7 @@ async def get_documents(
     return documents
 
 
-@router.get("/documents/{document_id}", response_model=DocumentDownloadUrl)
+@router.get("/documents/{document_id}/download", response_model=DocumentDownloadUrl)
 async def get_document_url(
     document_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_document_access)],

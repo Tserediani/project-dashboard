@@ -26,7 +26,7 @@ from project_dashboard.services.document_service import DocumentService
 from project_dashboard.services.project_service import ProjectService
 from project_dashboard.services.s3_storage_service import S3StorageService
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 async def get_current_user(

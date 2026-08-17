@@ -7,47 +7,8 @@ from project_dashboard.core.exceptions import (
     NotFoundError,
     PayloadTooLargeError,
 )
-from project_dashboard.core.interfaces.storage_interface import StorageService
-from project_dashboard.repositories.documents_repository import (
-    DocumentRepository,
-)
 from project_dashboard.services.document_service import DocumentService
 from project_dashboard.core.config import CONFIG
-
-
-@pytest.fixture
-def document_repo() -> AsyncMock:
-    return AsyncMock(spec=DocumentRepository)
-
-
-@pytest.fixture
-def storage_service() -> AsyncMock:
-    return AsyncMock(spec=StorageService)
-
-
-@pytest.fixture
-def document_service(
-    document_repo: AsyncMock, storage_service: AsyncMock
-) -> DocumentService:
-    return DocumentService(document_repo=document_repo, storage_service=storage_service)
-
-
-@pytest.fixture
-def fake_document() -> MagicMock:
-    id = uuid.uuid4()
-    project_id = uuid.uuid4()
-    uploaded_by = uuid.uuid4()
-    content = b"test content"
-    return MagicMock(
-        id=id,
-        project_id=project_id,
-        uploaded_by=uploaded_by,
-        filename="test.txt",
-        content_type="test/plain",
-        s3_key=f"projects/{project_id}/documents/{id}",
-        content=content,
-        size_bytes=len(content),
-    )
 
 
 @pytest.mark.asyncio

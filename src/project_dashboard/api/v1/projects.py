@@ -20,10 +20,10 @@ from project_dashboard.schemas.project import (
 )
 from project_dashboard.services.project_service import ProjectService
 
-router = APIRouter()
+router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-@router.post("/projects", status_code=201, response_model=ProjectRead)
+@router.post("", status_code=201, response_model=ProjectRead)
 async def create_project(
     payload: ProjectCreate,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -37,7 +37,7 @@ async def create_project(
     return project
 
 
-@router.get("/projects", response_model=list[ProjectRead])
+@router.get("", response_model=list[ProjectRead])
 async def list_projects(
     current_user: Annotated[User, Depends(get_current_user)],
     service: Annotated[ProjectService, Depends(get_project_service)],
@@ -46,13 +46,13 @@ async def list_projects(
     return projects
 
 
-@router.get("/project/{project_id}/info", response_model=ProjectRead)
+@router.get("/{project_id}", response_model=ProjectRead)
 async def get_project(access: Annotated[ProjectAccess, Depends(get_project_access)]):
     return access.project
 
 
 @router.put(
-    "/project/{project_id}/info",
+    "/{project_id}",
     response_model=ProjectRead,
     dependencies=[Depends(require_owner)],
 )
@@ -69,9 +69,7 @@ async def update_project(
     return project
 
 
-@router.delete(
-    "/project/{project_id}", status_code=204, dependencies=[Depends(require_owner)]
-)
+@router.delete("/{project_id}", status_code=204, dependencies=[Depends(require_owner)])
 async def delete_project(
     project_id: uuid.UUID,
     service: Annotated[ProjectService, Depends(get_project_service)],
@@ -81,7 +79,7 @@ async def delete_project(
     await session.commit()
 
 
-@router.post("/project/{project_id}/invite")
+@router.post("/{project_id}/invite")
 async def invite_user(
     project_id: uuid.UUID,
     query: InviteRequest,
