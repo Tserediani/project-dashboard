@@ -75,7 +75,7 @@ async def add_as_participant(
 ) -> None:
     payload = {"email": target_email}
     response = await client.post(
-        f"/project/{project.id}/invite", headers=owner.auth_headers, json=payload
+        f"/projects/{project.id}/invite", headers=owner.auth_headers, json=payload
     )
     assert response.status_code == 200, response.text
 
@@ -344,7 +344,7 @@ async def test_get_documents_returns_404_when_user_has_no_accesss(
     assert response.status_code == 404
 
 
-async def test_get_document_project_owner_gets_document_metadata(
+async def test_get_document_url_project_owner_gets_document_url(
     client: AsyncClient,
     user_alice: FakeUser,
     user_bob: FakeUser,
@@ -357,7 +357,8 @@ async def test_get_document_project_owner_gets_document_metadata(
     )
 
     response = await client.get(
-        f"/documents/{fake_document_metadata.id}", headers=user_alice.auth_headers
+        f"/documents/{fake_document_metadata.id}/download",
+        headers=user_alice.auth_headers,
     )
 
     assert response.status_code == 200
@@ -367,7 +368,7 @@ async def test_get_document_project_owner_gets_document_metadata(
     storage_service.generate_presigned_url.assert_awaited_once()
 
 
-async def test_get_document_url_project_participant_gets_document_metadata(
+async def test_get_document_url_project_participant_gets_document_url(
     client: AsyncClient,
     user_alice: FakeUser,
     user_bob: FakeUser,
@@ -383,7 +384,8 @@ async def test_get_document_url_project_participant_gets_document_metadata(
     )
 
     response = await client.get(
-        f"/documents/{fake_document_metadata.id}", headers=user_bob.auth_headers
+        f"/documents/{fake_document_metadata.id}/download",
+        headers=user_bob.auth_headers,
     )
 
     assert response.status_code == 200
@@ -396,7 +398,7 @@ async def test_get_document_url_project_participant_gets_document_metadata(
 async def test_get_document_url_returns_401_when_user_not_logged_in(
     client: AsyncClient,
 ):
-    response = await client.get(f"/documents/{uuid.uuid4()}")
+    response = await client.get(f"/documents/{uuid.uuid4()}/download")
     assert response.status_code == 401
 
 
@@ -411,7 +413,8 @@ async def test_get_document_url_returns_404_when_user_has_no_access(
         client, document=fake_document, user=user_alice, project=alices_project
     )
     response = await client.get(
-        f"/documents/{fake_document_metadata.id}", headers=user_bob.auth_headers
+        f"/documents/{fake_document_metadata.id}/download",
+        headers=user_bob.auth_headers,
     )
 
     assert response.status_code == 404
