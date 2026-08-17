@@ -5,7 +5,9 @@ from project_dashboard.api.v1.auth import router as auth_router
 from project_dashboard.api.v1.documents import router as documents_router
 from project_dashboard.api.v1.projects import router as projects_router
 
-app = FastAPI()
+app = FastAPI(
+    responses={401: {"description": "Invalid or missing authentication credentials"}}
+)
 app.include_router(auth_router)
 app.include_router(projects_router)
 app.include_router(documents_router)
