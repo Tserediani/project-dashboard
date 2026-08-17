@@ -1,18 +1,19 @@
 import uuid
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from pydantic.config import ConfigDict
 
 
 class ProjectCreate(BaseModel):
-    name: str
-    description: str | None = None
+    name: Annotated[str, Field(min_length=1, max_length=100)]
+    description: Annotated[str | None, Field(max_length=1000)] = None
 
 
 class ProjectUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
+    name: Annotated[str | None, Field(min_length=1, max_length=100)] = None
+    description: Annotated[str | None, Field(max_length=1000)] = None
 
 
 class ProjectRead(BaseModel):
