@@ -1,10 +1,14 @@
+from unittest.mock import AsyncMock
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 import project_dashboard.models  # noqa: F401
+from project_dashboard.api.deps import get_storage_service
 from project_dashboard.core.config import CONFIG
+from project_dashboard.core.interfaces.storage_interface import StorageService
 from project_dashboard.db.base import Base
 from project_dashboard.db.session import get_session
 from project_dashboard.main import app
@@ -50,11 +54,24 @@ async def db_session(create_test_database):
 
 
 @pytest.fixture
-async def client(db_session: AsyncSession):
+async def storage_service() -> AsyncMock:
+    mock = AsyncMock(spec=StorageService)
+    mock.generate_presigned_url.return_value = "https://example.com"
+
+    return mock
+
+
+@pytest.fixture
+async def client(db_session: AsyncSession, storage_service: AsyncMock):
     async def override_get_db():
         yield db_session
 
+    async def override_storage_service():
+        yield storage_service
+
     app.dependency_overrides[get_session] = override_get_db
+    app.dependency_overrides[get_storage_service] = override_storage_service
+
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
