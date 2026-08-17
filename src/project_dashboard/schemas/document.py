@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, HttpUrl
 from pydantic.config import ConfigDict
 
 
@@ -11,7 +12,7 @@ class DocumentRead(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
     uploaded_by: uuid.UUID | None
-    filename: str
+    filename: Annotated[str, Field(min_length=1, max_length=255)]
     s3_key: str
     content_type: str
     size_bytes: int
@@ -20,9 +21,9 @@ class DocumentRead(BaseModel):
 
 
 class DocumentUpdate(BaseModel):
-    filename: str | None = None
+    filename: Annotated[str | None, Field(min_length=1, max_length=255)] = None
 
 
 class DocumentDownloadUrl(BaseModel):
-    url: str
-    expires_in: int
+    url: HttpUrl
+    expires_in: Annotated[int, Field(gt=0)]
