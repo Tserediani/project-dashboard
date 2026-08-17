@@ -60,10 +60,13 @@ class DocumentRepository:
     async def update_document(
         self,
         document: Document,
+        s3_key: str | None = None,
         filename: str | None = None,
         content_type: str | None = None,
         size_bytes: int | None = None,
     ):
+        if s3_key is not None:
+            document.s3_key = s3_key
         if filename is not None:
             document.filename = filename
         if content_type is not None:

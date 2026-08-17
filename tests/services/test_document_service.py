@@ -168,31 +168,39 @@ async def test_replace_document_replaces_document_and_document_metadata(
     document_repo.get_by_id.return_value = fake_document
     document_repo.sum_size_by_project.return_value = fake_document.size_bytes
     document_repo.update_document.return_value = AsyncMock(filename="new-filename.txt")
+    new_uuid = uuid.uuid4()
+    new_s3_key = f"projects/{fake_document.project_id}/documents/{new_uuid}"
+    with patch("project_dashboard.services.document_service.uuid.uuid4") as mock_uuid:
+        mock_uuid.return_value = new_uuid
 
-    document = await document_service.replace_document(
-        fake_document.id,
-        b"new-content",
-        fake_document.content_type,
-        "new-filename.txt",
-    )
+        document = await document_service.replace_document(
+            fake_document.id,
+            b"new-content",
+            fake_document.content_type,
+            "new-filename.txt",
+        )
 
-    assert document.filename == "new-filename.txt"
+        assert document.filename == "new-filename.txt"
 
-    document_repo.get_by_id.assert_awaited_once_with(fake_document.id)
-    document_repo.sum_size_by_project.assert_awaited_once_with(
-        project_id=fake_document.project_id
-    )
-    storage_service.upload.assert_awaited_once_with(
-        key=fake_document.s3_key,
-        content=b"new-content",
-        content_type=fake_document.content_type,
-    )
-    document_repo.update_document.assert_awaited_once_with(
-        fake_document,
-        filename="new-filename.txt",
-        content_type=fake_document.content_type,
-        size_bytes=len(b"new-content"),
-    )
+        document_repo.get_by_id.assert_awaited_once_with(fake_document.id)
+        document_repo.sum_size_by_project.assert_awaited_once_with(
+            project_id=fake_document.project_id
+        )
+        storage_service.upload.assert_awaited_once_with(
+            key=new_s3_key,
+            content=b"new-content",
+            content_type=fake_document.content_type,
+        )
+        document_repo.update_document.assert_awaited_once_with(
+            fake_document,
+            s3_key=new_s3_key,
+            filename="new-filename.txt",
+            content_type=fake_document.content_type,
+            size_bytes=len(b"new-content"),
+        )
+        storage_service.delete.assert_awaited_once_with(
+            key=fake_document.s3_key,
+        )
 
 
 async def test_replace_document_raises_not_found_error_when_document_not_exists(

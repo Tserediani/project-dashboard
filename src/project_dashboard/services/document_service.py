@@ -81,15 +81,20 @@ class DocumentService:
             new_size_bytes=size_bytes,
             old_size_bytes=document.size_bytes,
         )
+        new_s3_key = f"projects/{document.project_id}/documents/{uuid.uuid4()}"
+        old_s3_key = document.s3_key
         await self.storage_service.upload(
-            key=document.s3_key, content=content, content_type=content_type
+            key=new_s3_key, content=content, content_type=content_type
         )
-        return await self.document_repo.update_document(
+        new_document = await self.document_repo.update_document(
             document,
+            s3_key=new_s3_key,
             filename=filename,
             content_type=content_type,
             size_bytes=size_bytes,
         )
+        await self.storage_service.delete(key=old_s3_key)
+        return new_document
 
     async def update_document_metadata(
         self, document_id: uuid.UUID, filename: str | None
@@ -103,8 +108,8 @@ class DocumentService:
         document = await self.document_repo.get_by_id(document_id=document_id)
         if document is None:
             raise NotFoundError("Document not found.")
-        await self.storage_service.delete(document.s3_key)
         await self.document_repo.delete(document)
+        await self.storage_service.delete(document.s3_key)
 
     async def list_by_project(self, project_id: uuid.UUID) -> list[Document]:
         return await self.document_repo.list_by_project(project_id=project_id)

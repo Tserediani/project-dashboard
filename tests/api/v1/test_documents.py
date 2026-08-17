@@ -420,7 +420,6 @@ async def test_get_document_url_returns_404_when_user_has_no_access(
 async def test_update_document_metadata_project_owner_updates_document_metadata(
     client: AsyncClient,
     user_alice: FakeUser,
-    user_bob: FakeUser,
     alices_project: FakeProject,
     fake_document: FakeDocument,
 ):
@@ -511,6 +510,7 @@ async def test_update_document_project_owner_updates_document(
     fake_document_metadata = await upload_document(
         client, document=fake_document, user=user_alice, project=alices_project
     )
+    storage_service.reset_mock()
 
     response = await client.put(
         f"/documents/{fake_document_metadata.id}",
@@ -533,12 +533,8 @@ async def test_update_document_project_owner_updates_document(
         size_bytes=updated_file.size_bytes,
         filename=updated_file.filename,
     )
-
-    storage_service.upload.assert_any_await(
-        key=fake_document_metadata.s3_key,
-        content=updated_file.content,
-        content_type=updated_file.content_type,
-    )
+    storage_service.upload.assert_awaited_once()
+    storage_service.delete.assert_awaited_once()
 
 
 async def test_update_document_project_participant_updates_document(
@@ -558,6 +554,7 @@ async def test_update_document_project_participant_updates_document(
     fake_document_metadata = await upload_document(
         client, document=fake_document, user=user_alice, project=alices_project
     )
+    storage_service.reset_mock()
 
     response = await client.put(
         f"/documents/{fake_document_metadata.id}",
@@ -580,11 +577,8 @@ async def test_update_document_project_participant_updates_document(
         size_bytes=updated_file.size_bytes,
         filename=updated_file.filename,
     )
-    storage_service.upload.assert_any_await(
-        key=fake_document_metadata.s3_key,
-        content=updated_file.content,
-        content_type=updated_file.content_type,
-    )
+    storage_service.upload.assert_awaited_once()
+    storage_service.delete.assert_awaited_once()
 
 
 async def test_update_document_returns_401_when_user_not_logged_in(
