@@ -26,6 +26,7 @@ router = APIRouter(tags=["documents"])
     "/projects/{project_id}/documents",
     status_code=201,
     response_model=DocumentRead,
+    summary="Upload a document",
 )
 async def upload_document(
     project_id: uuid.UUID,
@@ -35,6 +36,7 @@ async def upload_document(
     document_service: Annotated[DocumentService, Depends(get_document_service)],
     file: UploadFile,
 ):
+    """Upload a document to a project."""
     document = await document_service.upload_document(
         project_id=project_id,
         uploaded_by=current_user.id,
@@ -46,27 +48,43 @@ async def upload_document(
     return document
 
 
-@router.get("/projects/{project_id}/documents", response_model=list[DocumentRead])
+@router.get(
+    "/projects/{project_id}/documents",
+    response_model=list[DocumentRead],
+    summary="List project documents",
+)
 async def list_documents(
     project_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_project_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
 ):
+    """List all documents belonging to a project."""
     documents = await document_service.list_by_project(project_id=project_id)
     return documents
 
 
-@router.get("/documents/{document_id}/download", response_model=DocumentDownloadUrl)
+@router.get(
+    "/documents/{document_id}/download",
+    response_model=DocumentDownloadUrl,
+    summary="Get a document downlaod URL",
+)
 async def get_document_url(
     document_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_document_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
 ):
+    """Generate a temporary URL for downloading a document.
+
+    The URL expires after 5 minutes."""
     url = await document_service.get_download_url(document_id=document_id)
     return DocumentDownloadUrl(url=url, expires_in=300)
 
 
-@router.patch("/documents/{document_id}", response_model=DocumentRead)
+@router.patch(
+    "/documents/{document_id}",
+    response_model=DocumentRead,
+    summary="Update document metadata",
+)
 async def update_document_metadata(
     document_id: uuid.UUID,
     payload: DocumentUpdate,
@@ -74,6 +92,7 @@ async def update_document_metadata(
     document_service: Annotated[DocumentService, Depends(get_document_service)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    """Update the metadata of an existing document."""
     document = await document_service.update_document_metadata(
         document_id=document_id, filename=payload.filename
     )
@@ -81,7 +100,11 @@ async def update_document_metadata(
     return document
 
 
-@router.put("/documents/{document_id}", response_model=DocumentRead)
+@router.put(
+    "/documents/{document_id}",
+    response_model=DocumentRead,
+    summary="Replace a document",
+)
 async def update_document(
     document_id: uuid.UUID,
     file: UploadFile,
@@ -89,6 +112,7 @@ async def update_document(
     document_service: Annotated[DocumentService, Depends(get_document_service)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    """Replace the content and metadata of an existing document."""
     document = await document_service.replace_document(
         document_id,
         content=await file.read(),
@@ -99,12 +123,13 @@ async def update_document(
     return document
 
 
-@router.delete("/documents/{document_id}", status_code=204)
+@router.delete("/documents/{document_id}", status_code=204, summary="Delete a document")
 async def delete_document(
     document_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_document_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
+    """Delete a document and its associated file."""
     await document_service.delete_document(document_id)
     await session.commit()
