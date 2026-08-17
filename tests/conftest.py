@@ -86,12 +86,12 @@ async def auth_user_factory(
 ) -> AuthUserFactory:
     async def _auth_user(email: str, password: str = "password!123") -> FakeUser:
         register_response = await client.post(
-            "/auth",
+            "/auth/register",
             json={"email": email, "password": password, "repeat_password": password},
         )
         register_response.raise_for_status()
         login_response = await client.post(
-            "/login", data={"username": email, "password": password}
+            "/auth/login", data={"username": email, "password": password}
         )
         login_response.raise_for_status()
         token = login_response.json()["access_token"]

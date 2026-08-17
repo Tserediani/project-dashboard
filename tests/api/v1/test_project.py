@@ -5,6 +5,8 @@ from httpx import AsyncClient
 
 from tests.helpers import AuthUserFactory, FakeProject, FakeUser
 
+PREFIX = "/projects"
+
 
 def assert_project_payload(
     project: dict,
@@ -26,7 +28,7 @@ async def create_user_project(
 ) -> FakeProject:
     payload = {"name": name, "description": description}
     response = await client.post(
-        "/projects",
+        f"{PREFIX}",
         json=payload,
         headers=user.auth_headers,
     )
@@ -50,7 +52,7 @@ async def add_as_participant(
 ) -> None:
     payload = {"email": target_email}
     response = await client.post(
-        f"/project/{project.id}/invite", headers=owner.auth_headers, json=payload
+        f"/projects/{project.id}/invite", headers=owner.auth_headers, json=payload
     )
     assert response.status_code == 200, response.text
 
@@ -96,7 +98,7 @@ async def test_create_project_auth_user_creates_project(
     payload = {"name": "My Project", "description": "Project Description"}
 
     response = await client.post(
-        "/projects",
+        PREFIX,
         json=payload,
         headers=user_alice.auth_headers,
     )
@@ -117,7 +119,7 @@ async def test_create_project_returns_401_when_user_not_logged(
 ):
     payload = {"name": "My Project", "description": "Project Description"}
     response = await client.post(
-        "/projects",
+        PREFIX,
         json=payload,
     )
 
@@ -130,7 +132,7 @@ async def test_list_projects_returns_projects_user_has_access(
     alices_project: FakeProject,
     bobs_project: FakeProject,
 ):
-    response = await client.get("/projects", headers=user_alice.auth_headers)
+    response = await client.get(PREFIX, headers=user_alice.auth_headers)
 
     assert response.status_code == 200, response.text
     projects = response.json()
@@ -147,7 +149,7 @@ async def test_list_projects_returns_projects_user_has_access(
 async def test_list_projects_returns_401_when_user_not_logged(
     client: AsyncClient,
 ):
-    response = await client.get("/projects")
+    response = await client.get(PREFIX)
     assert response.status_code == 401, response.text
 
 
@@ -156,7 +158,7 @@ async def test_get_project_returns_project_user_has_access(
 ):
 
     response = await client.get(
-        f"/project/{alices_project.id}/info",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_alice.auth_headers,
     )
 
@@ -175,7 +177,7 @@ async def test_get_project_returns_404_when_user_logged_and_project_not_exist(
     client: AsyncClient, user_alice: FakeUser
 ):
     response = await client.get(
-        f"/project/{uuid.uuid4()}/info",
+        f"{PREFIX}/{uuid.uuid4()}",
         headers=user_alice.auth_headers,
     )
     assert response.status_code == 404, response.text
@@ -186,14 +188,14 @@ async def test_get_project_returns_404_when_user_has_no_access(
 ):
 
     response = await client.get(
-        f"/project/{bobs_project.id}/info",
+        f"{PREFIX}/{bobs_project.id}",
         headers=user_alice.auth_headers,
     )
     assert response.status_code == 404, response.text
 
 
 async def test_get_project_returns_401_when_user_not_logged(client: AsyncClient):
-    response = await client.get(f"/project/{uuid.uuid4()}/info")
+    response = await client.get(f"{PREFIX}/{uuid.uuid4()}")
     assert response.status_code == 401, response.text
 
 
@@ -220,7 +222,7 @@ async def test_update_project_updates_project_when_user_owns(
     description: str | None,
 ):
     response = await client.put(
-        f"/project/{alices_project.id}/info",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_alice.auth_headers,
         json={"name": name, "description": description},
     )
@@ -242,7 +244,7 @@ async def test_update_project_returns_404_when_user_has_no_access(
     client: AsyncClient, user_alice: FakeUser, bobs_project: FakeProject
 ):
     response = await client.put(
-        f"/project/{bobs_project.id}/info",
+        f"{PREFIX}/{bobs_project.id}",
         headers=user_alice.auth_headers,
         json={"name": "name"},
     )
@@ -262,7 +264,7 @@ async def test_update_project_returns_403_when_user_is_participant(
     )
 
     response = await client.put(
-        f"/project/{alices_project.id}/info",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_bob.auth_headers,
         json={"name": "name"},
     )
@@ -270,7 +272,7 @@ async def test_update_project_returns_403_when_user_is_participant(
 
 
 async def test_update_project_returns_401_when_user_not_logged(client: AsyncClient):
-    response = await client.put(f"/project/{uuid.uuid4()}/info", json={"name": "name"})
+    response = await client.put(f"{PREFIX}/{uuid.uuid4()}", json={"name": "name"})
     assert response.status_code == 401, response.text
 
 
@@ -278,7 +280,7 @@ async def test_update_project_returns_404_when_user_logged_and_project_not_exist
     client: AsyncClient, user_alice: FakeUser
 ):
     response = await client.put(
-        f"/project/{uuid.uuid4()}/info",
+        f"{PREFIX}/{uuid.uuid4()}/info",
         headers=user_alice.auth_headers,
         json={"name": "name"},
     )
@@ -289,7 +291,7 @@ async def test_delete_project_deletes_project_when_user_owns(
     client: AsyncClient, user_alice: FakeUser, alices_project: FakeProject
 ):
     response = await client.delete(
-        f"/project/{alices_project.id}",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_alice.auth_headers,
     )
     assert response.status_code == 204, response.text
@@ -301,7 +303,7 @@ async def test_delete_project_returns_404_when_user_has_no_access(
     alices_project: FakeProject,
 ):
     response = await client.delete(
-        f"/project/{alices_project.id}",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_bob.auth_headers,
     )
     assert response.status_code == 404, response.text
@@ -317,14 +319,14 @@ async def test_delete_project_returns_403_when_user_is_participant(
         client, target_email=user_bob.email, owner=user_alice, project=alices_project
     )
     response = await client.delete(
-        f"/project/{alices_project.id}",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_bob.auth_headers,
     )
     assert response.status_code == 403, response.text
 
 
 async def test_delete_project_returns_401_when_user_not_logged(client: AsyncClient):
-    response = await client.delete(f"/project/{uuid.uuid4()}")
+    response = await client.delete(f"{PREFIX}/{uuid.uuid4()}")
     assert response.status_code == 401, response.text
 
 
@@ -332,7 +334,7 @@ async def test_delete_project_returns_404_when_user_logged_and_project_not_exist
     client: AsyncClient, user_alice: FakeUser
 ):
     response = await client.delete(
-        f"/project/{uuid.uuid4()}",
+        f"{PREFIX}/{uuid.uuid4()}",
         headers=user_alice.auth_headers,
     )
     assert response.status_code == 404, response.text
@@ -345,7 +347,7 @@ async def test_invite_user_owner_adds_user_as_participant(
     alices_project: FakeProject,
 ):
     response = await client.post(
-        f"/project/{alices_project.id}/invite",
+        f"{PREFIX}/{alices_project.id}/invite",
         json={"email": user_bob.email},
         headers=user_alice.auth_headers,
     )
@@ -353,7 +355,7 @@ async def test_invite_user_owner_adds_user_as_participant(
     assert response.status_code == 200, response.text
 
     invited_project = await client.get(
-        f"/project/{alices_project.id}/info",
+        f"{PREFIX}/{alices_project.id}",
         headers=user_bob.auth_headers,
     )
     assert invited_project.status_code == 200, invited_project.text
@@ -371,7 +373,7 @@ async def test_invite_user_returns_403_when_user_is_participant(
         client, target_email=user_bob.email, owner=user_alice, project=alices_project
     )
     response = await client.post(
-        f"/project/{alices_project.id}/invite",
+        f"{PREFIX}/{alices_project.id}/invite",
         json={"email": user_charlie.email},
         headers=user_bob.auth_headers,
     )
@@ -380,7 +382,7 @@ async def test_invite_user_returns_403_when_user_is_participant(
 
 async def test_invite_user_returns_401_when_user_not_logged(client: AsyncClient):
     response = await client.post(
-        f"/project/{uuid.uuid4()}/invite",
+        f"{PREFIX}/{uuid.uuid4()}/invite",
         json={"email": "alice@example.com"},
     )
     assert response.status_code == 401, response.text
@@ -390,7 +392,7 @@ async def test_invite_user_returns_404_when_user_logged_and_project_not_exist(
     client: AsyncClient, user_alice: FakeUser, user_bob: FakeUser
 ):
     response = await client.post(
-        f"/project/{uuid.uuid4()}/invite",
+        f"{PREFIX}/{uuid.uuid4()}/invite",
         json={"email": user_bob.email},
         headers=user_alice.auth_headers,
     )
@@ -403,7 +405,7 @@ async def test_invite_user_returns_404_when_user_logged_on_nonexistant_target_em
     alices_project: FakeProject,
 ):
     response = await client.post(
-        f"/project/{alices_project.id}/invite",
+        f"{PREFIX}/{alices_project.id}/invite",
         json={"email": "nonexistant@exampl.com"},
         headers=user_alice.auth_headers,
     )
@@ -414,7 +416,7 @@ async def test_invite_user_returns_409_when_user_invites_self(
     client: AsyncClient, user_alice: FakeUser, alices_project: FakeProject
 ):
     response = await client.post(
-        f"/project/{alices_project.id}/invite",
+        f"{PREFIX}/{alices_project.id}/invite",
         json={"email": user_alice.email},
         headers=user_alice.auth_headers,
     )
@@ -432,7 +434,7 @@ async def test_invite_user_returns_valid_response_when_target_is_already_partici
     )
 
     response = await client.post(
-        f"/project/{alices_project.id}/invite",
+        f"{PREFIX}/{alices_project.id}/invite",
         json={"email": user_bob.email},
         headers=user_alice.auth_headers,
     )
