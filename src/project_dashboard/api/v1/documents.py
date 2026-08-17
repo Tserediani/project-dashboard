@@ -40,7 +40,7 @@ async def upload_document(
         uploaded_by=current_user.id,
         content=await file.read(),
         content_type=file.content_type or "application/octet-stream",
-        filename=file.filename or str(uuid.uuid4()),
+        filename=file.filename,
     )
     await session.commit()
     return document
@@ -93,7 +93,7 @@ async def update_document(
         document_id,
         content=await file.read(),
         content_type=file.content_type or "application/octet-stream",
-        filename=file.filename or str(uuid.uuid4()),
+        filename=file.filename,
     )
     await session.commit()
     return document

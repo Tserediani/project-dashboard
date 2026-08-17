@@ -1,3 +1,4 @@
+import mimetypes
 import uuid
 
 from project_dashboard.core.config import CONFIG
@@ -29,15 +30,22 @@ class DocumentService:
         if new_total > CONFIG.document.max_project_storage_bytes:
             raise PayloadTooLargeError("Project storage limit exceeded")
 
+    async def _resolve_filename(self, filename: str | None, content_type: str):
+        if filename:
+            return filename
+        extension = mimetypes.guess_extension(content_type) or ""
+        return f"{uuid.uuid4()}{extension}"
+
     async def upload_document(
         self,
         project_id: uuid.UUID,
         uploaded_by: uuid.UUID,
         content: bytes,
         content_type: str,
-        filename: str,
+        filename: str | None,
     ) -> Document:
         size_bytes = len(content)
+        filename = await self._resolve_filename(filename, content_type)
         await self._validate_storage_limit(
             project_id=project_id, new_size_bytes=size_bytes
         )
@@ -69,13 +77,17 @@ class DocumentService:
         )
 
     async def replace_document(
-        self, document_id: uuid.UUID, content: bytes, content_type: str, filename: str
+        self,
+        document_id: uuid.UUID,
+        content: bytes,
+        content_type: str,
+        filename: str | None,
     ) -> Document:
         document = await self.document_repo.get_by_id(document_id)
         if document is None:
             raise NotFoundError("Document not found.")
-
         size_bytes = len(content)
+        filename = await self._resolve_filename(filename, content_type)
         await self._validate_storage_limit(
             project_id=document.project_id,
             new_size_bytes=size_bytes,
