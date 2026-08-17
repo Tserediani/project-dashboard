@@ -10,10 +10,10 @@ from project_dashboard.schemas.token import TokenResponse
 from project_dashboard.schemas.user import RegisterRequest, UserRead
 from project_dashboard.services.auth_service import AuthService
 
-router = APIRouter(tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/auth", status_code=201, response_model=UserRead)
+@router.post("/register", status_code=201, response_model=UserRead)
 async def register(
     payload: RegisterRequest, session: Annotated[AsyncSession, Depends(get_session)]
 ):
