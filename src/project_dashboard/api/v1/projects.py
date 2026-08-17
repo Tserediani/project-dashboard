@@ -60,6 +60,9 @@ async def list_projects(
     "/{project_id}",
     response_model=ProjectRead,
     summary="Get a project",
+    responses={
+        404: {"description": "Project not found"},
+    },
 )
 async def get_project(access: Annotated[ProjectAccess, Depends(get_project_access)]):
     """Retrive a project accessible to the authenticated user."""
@@ -71,6 +74,9 @@ async def get_project(access: Annotated[ProjectAccess, Depends(get_project_acces
     response_model=ProjectRead,
     dependencies=[Depends(require_owner)],
     summary="Update a project",
+    responses={
+        404: {"description": "Project not found"},
+    },
 )
 async def update_project(
     project_id: uuid.UUID,
@@ -91,6 +97,9 @@ async def update_project(
     status_code=204,
     dependencies=[Depends(require_owner)],
     summary="Delete a project",
+    responses={
+        404: {"description": "Project not found"},
+    },
 )
 async def delete_project(
     project_id: uuid.UUID,
@@ -105,6 +114,10 @@ async def delete_project(
 @router.post(
     "/{project_id}/invite",
     summary="Invite a user to a project",
+    responses={
+        404: {"description": "Project not found"},
+        409: {"description": "The user already has access to the project"},
+    },
 )
 async def invite_user(
     project_id: uuid.UUID,
