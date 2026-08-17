@@ -19,7 +19,7 @@ def assert_document_payload(
     project_id: uuid.UUID,
     uploaded_by: uuid.UUID,
     content_type: str,
-    size_bytes: str,
+    size_bytes: int,
     filename: str,
 ) -> None:
     assert uuid.UUID(document["id"])
