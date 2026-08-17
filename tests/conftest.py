@@ -12,7 +12,10 @@ from project_dashboard.core.interfaces.storage_interface import StorageService
 from project_dashboard.db.base import Base
 from project_dashboard.db.session import get_session
 from project_dashboard.main import app
-from tests.helpers import AuthUserFactory, FakeUser
+from tests.helpers.fake_models import (
+    AuthUserFactory,
+    FakeUser,
+)
 
 TEST_DATABASE_NAME = f"{CONFIG.postgres.db.get_secret_value()}_test"
 

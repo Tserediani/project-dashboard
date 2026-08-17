@@ -3,93 +3,13 @@ import uuid
 import pytest
 from httpx import AsyncClient
 
-from tests.helpers import AuthUserFactory, FakeProject, FakeUser
+from tests.helpers.api import (
+    add_as_participant,
+    assert_project_payload,
+)
+from tests.helpers.fake_models import FakeProject, FakeUser
 
 PREFIX = "/projects"
-
-
-def assert_project_payload(
-    project: dict,
-    *,
-    name: str | None,
-    description: str | None,
-    owner_id: uuid.UUID,
-) -> None:
-    assert project["name"] == name
-    assert project["description"] == description
-    assert uuid.UUID(project["owner_id"]) == owner_id
-
-
-async def create_user_project(
-    client: AsyncClient,
-    user: FakeUser,
-    name: str,
-    description: str | None = None,
-) -> FakeProject:
-    payload = {"name": name, "description": description}
-    response = await client.post(
-        f"{PREFIX}",
-        json=payload,
-        headers=user.auth_headers,
-    )
-    assert response.status_code == 201, response.text
-    project = response.json()
-    assert_project_payload(
-        project,
-        name=payload["name"],
-        description=payload["description"],
-        owner_id=user.id,
-    )
-    return FakeProject(**project)
-
-
-async def add_as_participant(
-    client: AsyncClient,
-    *,
-    target_email: str,
-    owner: FakeUser,
-    project: FakeProject,
-) -> None:
-    payload = {"email": target_email}
-    response = await client.post(
-        f"/projects/{project.id}/invite", headers=owner.auth_headers, json=payload
-    )
-    assert response.status_code == 200, response.text
-
-
-@pytest.fixture
-async def user_alice(auth_user_factory: AuthUserFactory) -> FakeUser:
-    return await auth_user_factory("alice@example.com")
-
-
-@pytest.fixture
-async def user_bob(auth_user_factory: AuthUserFactory) -> FakeUser:
-    return await auth_user_factory("bob@example.com")
-
-
-@pytest.fixture
-async def user_charlie(auth_user_factory: AuthUserFactory) -> FakeUser:
-    return await auth_user_factory("charlie@example.com")
-
-
-@pytest.fixture
-async def alices_project(client: AsyncClient, user_alice: FakeUser) -> FakeProject:
-    return await create_user_project(
-        client,
-        user=user_alice,
-        name="Alice's Project",
-        description="Alice's Project's Description",
-    )
-
-
-@pytest.fixture
-async def bobs_project(client: AsyncClient, user_bob: FakeUser) -> FakeProject:
-    return await create_user_project(
-        client,
-        user=user_bob,
-        name="Bob's Project",
-        description="Bob's Project's Description",
-    )
 
 
 async def test_create_project_auth_user_creates_project(
@@ -130,7 +50,6 @@ async def test_list_projects_returns_projects_user_has_access(
     client: AsyncClient,
     user_alice: FakeUser,
     alices_project: FakeProject,
-    bobs_project: FakeProject,
 ):
     response = await client.get(PREFIX, headers=user_alice.auth_headers)
 
