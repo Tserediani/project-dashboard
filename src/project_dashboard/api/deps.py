@@ -1,10 +1,12 @@
 import uuid
 from typing import Annotated
 
+import aioboto3
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from project_dashboard.core.config import CONFIG
 from project_dashboard.core.exceptions import (
     InvalidTokenError,
     NotFoundError,
@@ -90,7 +92,14 @@ def get_project_service(
 
 
 def get_storage_service() -> StorageService:
-    return S3StorageService()
+    return S3StorageService(
+        bucket_name=CONFIG.aws.s3_bucket,
+        region_name=CONFIG.aws.region,
+        session=aioboto3.Session(
+            aws_access_key_id=CONFIG.aws.access_key_id,
+            aws_secret_access_key=CONFIG.aws.secret_access_key,
+        ),
+    )
 
 
 def get_document_service(

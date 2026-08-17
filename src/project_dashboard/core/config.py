@@ -31,6 +31,13 @@ class DocumentConfig(BaseModel):
     max_project_storage_bytes: int
 
 
+class AWSConfig(BaseModel):
+    access_key_id: str
+    secret_access_key: str
+    region: str
+    s3_bucket: str
+
+
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -42,6 +49,7 @@ class AppConfig(BaseSettings):
     postgres: PostgresConfig
     jwt: JWTConfig
     document: DocumentConfig
+    aws: AWSConfig
 
 
 CONFIG = AppConfig()
