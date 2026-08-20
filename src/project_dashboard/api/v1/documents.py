@@ -2,7 +2,6 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from project_dashboard.api.deps import (
     get_current_user,
@@ -10,7 +9,6 @@ from project_dashboard.api.deps import (
     get_document_service,
     get_project_access,
 )
-from project_dashboard.db.session import get_session
 from project_dashboard.models import ProjectAccess, User
 from project_dashboard.schemas.document import (
     DocumentDownloadUrl,
@@ -34,7 +32,6 @@ router = APIRouter(tags=["documents"])
 )
 async def upload_document(
     project_id: uuid.UUID,
-    session: Annotated[AsyncSession, Depends(get_session)],
     current_user: Annotated[User, Depends(get_current_user)],
     access: Annotated[ProjectAccess, Depends(get_project_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
@@ -50,7 +47,6 @@ async def upload_document(
         content_type=file.content_type or "application/octet-stream",
         filename=file.filename,
     )
-    await session.commit()
     return document
 
 
@@ -105,13 +101,11 @@ async def update_document_metadata(
     payload: DocumentUpdate,
     access: Annotated[ProjectAccess, Depends(get_document_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
-    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Update the metadata of an existing document."""
     document = await document_service.update_document_metadata(
         document_id=document_id, filename=payload.filename
     )
-    await session.commit()
     return document
 
 
@@ -129,7 +123,6 @@ async def update_document(
     file: UploadFile,
     access: Annotated[ProjectAccess, Depends(get_document_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
-    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Replace the content and metadata of an existing document.
 
@@ -140,7 +133,6 @@ async def update_document(
         content_type=file.content_type or "application/octet-stream",
         filename=file.filename,
     )
-    await session.commit()
     return document
 
 
@@ -156,8 +148,6 @@ async def delete_document(
     document_id: uuid.UUID,
     access: Annotated[ProjectAccess, Depends(get_document_access)],
     document_service: Annotated[DocumentService, Depends(get_document_service)],
-    session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Delete a document and its associated file."""
     await document_service.delete_document(document_id)
-    await session.commit()

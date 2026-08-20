@@ -2,6 +2,7 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from project_dashboard.core.interfaces.storage_interface import StorageService
 from project_dashboard.models import Project, User
@@ -13,6 +14,11 @@ from project_dashboard.repositories.project_repository import ProjectRepository
 from project_dashboard.repositories.user_repository import UserRepository
 from project_dashboard.services.document_service import DocumentService
 from project_dashboard.services.project_service import ProjectService
+
+
+@pytest.fixture
+def session() -> AsyncMock:
+    return AsyncMock(spec=AsyncSession)
 
 
 @pytest.fixture
@@ -67,9 +73,15 @@ def storage_service() -> AsyncMock:
 
 @pytest.fixture
 def document_service(
-    document_repo: AsyncMock, storage_service: AsyncMock
+    document_repo: AsyncMock,
+    storage_service: AsyncMock,
+    session: AsyncMock,
 ) -> DocumentService:
-    return DocumentService(document_repo=document_repo, storage_service=storage_service)
+    return DocumentService(
+        document_repo=document_repo,
+        storage_service=storage_service,
+        session=session,
+    )
 
 
 @pytest.fixture
