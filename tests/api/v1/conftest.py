@@ -48,5 +48,6 @@ async def bobs_project(client: AsyncClient, user_bob: FakeUser) -> FakeProject:
 @pytest.fixture
 def fake_document() -> FakeDocument:
     return FakeDocument(
-        filename="test_file.txt", content=b"file content", content_type="text/plain"
+        filename="test_file.txt",
+        content=b"file content",
     )

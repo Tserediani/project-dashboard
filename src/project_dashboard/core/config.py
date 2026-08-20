@@ -29,6 +29,7 @@ class JWTConfig(BaseModel):
 
 class DocumentConfig(BaseModel):
     max_project_storage_bytes: int
+    allowed_content_types: list[str]
 
 
 class AWSConfig(BaseModel):

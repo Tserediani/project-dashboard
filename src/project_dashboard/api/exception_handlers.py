@@ -7,6 +7,7 @@ from project_dashboard.core.exceptions import (
     NotFoundError,
     PayloadTooLargeError,
     PermissionDeniedError,
+    UnsupportedDocumentTypeError,
 )
 
 
@@ -30,9 +31,18 @@ async def payload_too_large_handler(request: Request, exc: Exception) -> JSONRes
     return JSONResponse(status_code=413, content={"detail": str(exc)})
 
 
+async def unsupported_document_type_handler(
+    request: Request, exc: Exception
+) -> JSONResponse:
+    return JSONResponse(status_code=415, content={"detail": str(exc)})
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(NotFoundError, not_found_handler)
     app.add_exception_handler(PermissionDeniedError, permission_denied_handler)
     app.add_exception_handler(InvalidTokenError, invalid_token_handler)
     app.add_exception_handler(ConflictError, conflict_handler)
     app.add_exception_handler(PayloadTooLargeError, payload_too_large_handler)
+    app.add_exception_handler(
+        UnsupportedDocumentTypeError, unsupported_document_type_handler
+    )

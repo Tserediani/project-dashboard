@@ -36,7 +36,7 @@ class FakeDocument(BaseModel):
 
     @property
     def content_type(self) -> str:
-        return "text/plain"
+        return "application/pdf"
 
 
 class FakeDocumentMetadata(DocumentRead): ...

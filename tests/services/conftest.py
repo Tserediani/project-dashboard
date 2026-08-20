@@ -104,7 +104,7 @@ def fake_document() -> MagicMock:
         project_id=project_id,
         uploaded_by=uploaded_by,
         filename="test.txt",
-        content_type="test/plain",
+        content_type="application/pdf",
         s3_key=f"projects/{project_id}/documents/{id}",
         content=content,
         size_bytes=len(content),
