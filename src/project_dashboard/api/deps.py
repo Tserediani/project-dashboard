@@ -22,6 +22,7 @@ from project_dashboard.repositories.project_access_repository import (
 )
 from project_dashboard.repositories.project_repository import ProjectRepository
 from project_dashboard.repositories.user_repository import UserRepository
+from project_dashboard.services.auth_service import AuthService
 from project_dashboard.services.document_service import DocumentService
 from project_dashboard.services.project_service import ProjectService
 from project_dashboard.services.s3_storage_service import S3StorageService
@@ -81,6 +82,12 @@ async def require_owner(
     return access
 
 
+def get_auth_service(
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    return AuthService(user_repository=UserRepository(session), session=session)
+
+
 def get_project_service(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ProjectService:
@@ -88,6 +95,7 @@ def get_project_service(
         user_repo=UserRepository(session),
         project_repo=ProjectRepository(session),
         project_access_repo=ProjectAccessRepository(session),
+        session=session,
     )
 
 
