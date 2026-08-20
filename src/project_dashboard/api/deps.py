@@ -109,4 +109,6 @@ def get_document_service(
     return DocumentService(
         document_repo=DocumentRepository(session=session),
         storage_service=storage_service,
+        session=session,
+        project_repo=ProjectRepository(session=session),
     )

@@ -10,6 +10,12 @@ class ProjectRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_for_update(self, project_id: uuid.UUID) -> Project | None:
+        result = await self.session.execute(
+            select(Project).where(Project.id == project_id).with_for_update()
+        )
+        return result.scalar_one_or_none()
+
     async def create(
         self, name: str, description: str | None, owner_id: uuid.UUID
     ) -> Project:

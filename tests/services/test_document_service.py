@@ -17,8 +17,10 @@ async def test_upload_document_uploads_document_and_metadata(
     document_repo: AsyncMock,
     storage_service: AsyncMock,
     fake_document: MagicMock,
+    project_repo: AsyncMock,
 ):
     mock_document = AsyncMock(id=fake_document.id, s3_key=fake_document.s3_key)
+    project_repo.get_for_update.return_value = AsyncMock()
 
     document_repo.sum_size_by_project.return_value = 0
 
@@ -34,6 +36,7 @@ async def test_upload_document_uploads_document_and_metadata(
             content_type=fake_document.content_type,
             filename=fake_document.filename,
         )
+        project_repo.get_for_update.assert_awaited_once_with(fake_document.project_id)
 
         document_repo.sum_size_by_project.assert_awaited_once_with(
             project_id=fake_document.project_id
