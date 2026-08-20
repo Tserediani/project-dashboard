@@ -7,6 +7,7 @@ from project_dashboard.core.config import CONFIG
 from project_dashboard.core.exceptions import (
     NotFoundError,
     PayloadTooLargeError,
+    UnsupportedDocumentTypeError,
 )
 from project_dashboard.core.interfaces.storage_interface import StorageService
 from project_dashboard.models import Document
@@ -43,6 +44,13 @@ class DocumentService:
         extension = mimetypes.guess_extension(content_type) or ""
         return f"{uuid.uuid4()}{extension}"
 
+    async def _validate_content_type(self, content_type: str) -> None:
+        if (
+            mimetypes.guess_extension(content_type)
+            not in CONFIG.document.allowed_content_types
+        ):
+            raise UnsupportedDocumentTypeError("Document type is not supported.")
+
     async def upload_document(
         self,
         project_id: uuid.UUID,
@@ -51,6 +59,7 @@ class DocumentService:
         content_type: str,
         filename: str | None,
     ) -> Document:
+        await self._validate_content_type(content_type)
         project = await self.project_repo.get_for_update(project_id)
         if project is None:
             raise NotFoundError("Project not found")
@@ -94,6 +103,7 @@ class DocumentService:
         content_type: str,
         filename: str | None,
     ) -> Document:
+        await self._validate_content_type(content_type)
         document = await self.document_repo.get_by_id(document_id)
         if document is None:
             raise NotFoundError("Document not found.")

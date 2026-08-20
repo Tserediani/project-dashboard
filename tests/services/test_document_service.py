@@ -6,20 +6,29 @@ import pytest
 from project_dashboard.core.exceptions import (
     NotFoundError,
     PayloadTooLargeError,
+    UnsupportedDocumentTypeError,
 )
 from project_dashboard.services.document_service import DocumentService
 from project_dashboard.core.config import CONFIG
 
 
-@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "content_type",
+    (
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ),
+)
 async def test_upload_document_uploads_document_and_metadata(
     document_service: DocumentService,
     document_repo: AsyncMock,
     storage_service: AsyncMock,
     fake_document: MagicMock,
     project_repo: AsyncMock,
+    content_type: str,
 ):
     mock_document = AsyncMock(id=fake_document.id, s3_key=fake_document.s3_key)
+    fake_document.content_type = content_type
     project_repo.get_for_update.return_value = AsyncMock()
 
     document_repo.sum_size_by_project.return_value = 0
@@ -58,6 +67,30 @@ async def test_upload_document_uploads_document_and_metadata(
         )
 
         assert result == mock_document
+
+
+@pytest.mark.parametrize(
+    "content_type", ("text/plain", "image/png", "application/json")
+)
+async def test_upload_document_raises_unsupported_content_type_when_documents_type_is_not_in_allowed_list(
+    document_service: DocumentService,
+    document_repo: AsyncMock,
+    storage_service: AsyncMock,
+    project_repo: AsyncMock,
+    content_type: str,
+):
+    with pytest.raises(UnsupportedDocumentTypeError):
+        await document_service.upload_document(
+            project_id=uuid.uuid4(),
+            uploaded_by=uuid.uuid4(),
+            content=b"content",
+            content_type=content_type,
+            filename="invalid.txt",
+        )
+    project_repo.get_for_update.assert_not_called()
+    document_repo.sum_size_by_project.assert_not_called()
+    storage_service.upload.assert_not_called()
+    document_repo.add.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -123,11 +156,19 @@ async def test_get_download_url_raises_not_found_error_when_document_not_exists(
     storage_service.generate_presigned_url.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    "content_type",
+    (
+        "application/pdf",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ),
+)
 async def test_replace_document_replaces_document_and_document_metadata(
     document_repo: AsyncMock,
     storage_service: AsyncMock,
     document_service: DocumentService,
     fake_document: MagicMock,
+    content_type: str,
 ):
     document_repo.get_by_id.return_value = fake_document
     document_repo.sum_size_by_project.return_value = fake_document.size_bytes
@@ -140,7 +181,7 @@ async def test_replace_document_replaces_document_and_document_metadata(
         document = await document_service.replace_document(
             fake_document.id,
             b"new-content",
-            fake_document.content_type,
+            content_type,
             "new-filename.txt",
         )
 
@@ -153,18 +194,41 @@ async def test_replace_document_replaces_document_and_document_metadata(
         storage_service.upload.assert_awaited_once_with(
             key=new_s3_key,
             content=b"new-content",
-            content_type=fake_document.content_type,
+            content_type=content_type,
         )
         document_repo.update_document.assert_awaited_once_with(
             fake_document,
             s3_key=new_s3_key,
             filename="new-filename.txt",
-            content_type=fake_document.content_type,
+            content_type=content_type,
             size_bytes=len(b"new-content"),
         )
         storage_service.delete.assert_awaited_once_with(
             key=fake_document.s3_key,
         )
+
+
+@pytest.mark.parametrize(
+    "content_type", ("text/plain", "image/png", "application/json")
+)
+async def test_replace_document_raises_unsupported_content_type_when_documents_type_is_not_in_allowed_list(
+    document_service: DocumentService,
+    document_repo: AsyncMock,
+    storage_service: AsyncMock,
+    project_repo: AsyncMock,
+    content_type: str,
+):
+    with pytest.raises(UnsupportedDocumentTypeError):
+        await document_service.replace_document(
+            document_id=uuid.uuid4(),
+            content=b"content",
+            content_type=content_type,
+            filename="invalid.txt",
+        )
+    project_repo.get_for_update.assert_not_called()
+    document_repo.sum_size_by_project.assert_not_called()
+    storage_service.upload.assert_not_called()
+    document_repo.add.assert_not_called()
 
 
 async def test_replace_document_raises_not_found_error_when_document_not_exists(

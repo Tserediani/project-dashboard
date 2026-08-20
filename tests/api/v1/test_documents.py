@@ -1,6 +1,7 @@
 import uuid
 from unittest.mock import AsyncMock
 
+import pytest
 from httpx import AsyncClient
 
 from tests.helpers.api import (
@@ -22,7 +23,6 @@ async def test_upload_document_project_owner_uploads_document(
     storage_service: AsyncMock,
     fake_document: FakeDocument,
 ):
-
     response = await client.post(
         f"/projects/{alices_project.id}/documents",
         headers=user_alice.auth_headers,
@@ -85,6 +85,32 @@ async def test_upload_document_project_participant_uploads_document(
         filename=fake_document.filename,
     )
     storage_service.upload.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "content_type", ("text/plain", "image/png", "application/json")
+)
+async def test_upload_document_returns_415_when_document_type_is_not_supported(
+    client: AsyncClient,
+    user_alice: FakeUser,
+    alices_project: FakeProject,
+    storage_service: AsyncMock,
+    fake_document: FakeDocument,
+    content_type: str,
+):
+    response = await client.post(
+        f"/projects/{alices_project.id}/documents",
+        files={
+            "file": (
+                fake_document.filename,
+                fake_document.content,
+                content_type,
+            )
+        },
+        headers=user_alice.auth_headers,
+    )
+    assert response.status_code == 415
+    storage_service.upload.assert_not_awaited()
 
 
 async def test_upload_document_returns_401_when_user_not_logged_in(
@@ -373,9 +399,7 @@ async def test_update_document_project_owner_updates_document(
     fake_document: FakeDocument,
     storage_service: AsyncMock,
 ):
-    updated_file = FakeDocument(
-        filename="updated.txt", content=b"updated content", content_type="text/plain"
-    )
+    updated_file = FakeDocument(filename="updated.txt", content=b"updated content")
     fake_document_metadata = await upload_document(
         client, document=fake_document, user=user_alice, project=alices_project
     )
@@ -417,9 +441,7 @@ async def test_update_document_project_participant_updates_document(
     await add_as_participant(
         client, target_email=user_bob.email, owner=user_alice, project=alices_project
     )
-    updated_file = FakeDocument(
-        filename="updated.txt", content=b"updated content", content_type="text/plain"
-    )
+    updated_file = FakeDocument(filename="updated.txt", content=b"updated content")
     fake_document_metadata = await upload_document(
         client, document=fake_document, user=user_alice, project=alices_project
     )
@@ -448,6 +470,32 @@ async def test_update_document_project_participant_updates_document(
     )
     storage_service.upload.assert_awaited_once()
     storage_service.delete.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    "content_type", ("text/plain", "image/png", "application/json")
+)
+async def test_update_document_returns_415_when_document_type_is_not_supported(
+    client: AsyncClient,
+    user_alice: FakeUser,
+    alices_project: FakeProject,
+    storage_service: AsyncMock,
+    fake_document: FakeDocument,
+    content_type: str,
+):
+    updated_file = FakeDocument(filename="updated.txt", content=b"updated content")
+    fake_document_metadata = await upload_document(
+        client, document=fake_document, user=user_alice, project=alices_project
+    )
+    storage_service.reset_mock()
+
+    response = await client.put(
+        f"/documents/{fake_document_metadata.id}",
+        files={"file": (updated_file.filename, updated_file.content, content_type)},
+        headers=user_alice.auth_headers,
+    )
+    assert response.status_code == 415
+    storage_service.upload.assert_not_awaited()
 
 
 async def test_update_document_returns_401_when_user_not_logged_in(
