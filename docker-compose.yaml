@@ -38,6 +38,8 @@ services:
       target: development
     env_file:
       - .env
+    environment:
+      POSTGRES__HOST: postgres
     depends_on:
       postgres:
         condition: service_healthy
