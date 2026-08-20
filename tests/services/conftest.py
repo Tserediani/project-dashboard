@@ -76,11 +76,13 @@ def document_service(
     document_repo: AsyncMock,
     storage_service: AsyncMock,
     session: AsyncMock,
+    project_repo: AsyncMock,
 ) -> DocumentService:
     return DocumentService(
         document_repo=document_repo,
         storage_service=storage_service,
         session=session,
+        project_repo=project_repo,
     )
 
 

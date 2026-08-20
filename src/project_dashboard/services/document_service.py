@@ -11,6 +11,7 @@ from project_dashboard.core.exceptions import (
 from project_dashboard.core.interfaces.storage_interface import StorageService
 from project_dashboard.models import Document
 from project_dashboard.repositories.documents_repository import DocumentRepository
+from project_dashboard.repositories.project_repository import ProjectRepository
 
 
 class DocumentService:
@@ -19,10 +20,12 @@ class DocumentService:
         document_repo: DocumentRepository,
         storage_service: StorageService,
         session: AsyncSession,
+        project_repo: ProjectRepository,
     ):
         self.session = session
         self.document_repo = document_repo
         self.storage_service = storage_service
+        self.project_repo = project_repo
 
     async def _validate_storage_limit(
         self, project_id: uuid.UUID, new_size_bytes: int, old_size_bytes: int = 0
@@ -48,6 +51,10 @@ class DocumentService:
         content_type: str,
         filename: str | None,
     ) -> Document:
+        project = await self.project_repo.get_for_update(project_id)
+        if project is None:
+            raise NotFoundError("Project not found")
+
         size_bytes = len(content)
         filename = await self._resolve_filename(filename, content_type)
         await self._validate_storage_limit(
@@ -126,6 +133,10 @@ class DocumentService:
         document = await self.document_repo.get_by_id(document_id=document_id)
         if document is None:
             raise NotFoundError("Document not found.")
+
+        project = await self.project_repo.get_for_update(document.project_id)
+        if project is None:
+            raise NotFoundError("Project not found")
 
         await self.document_repo.delete(document)
         await self.storage_service.delete(document.s3_key)
