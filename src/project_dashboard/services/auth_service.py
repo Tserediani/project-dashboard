@@ -1,4 +1,5 @@
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from project_dashboard.core.exceptions import ConflictError, PermissionDeniedError
 from project_dashboard.core.security import (
@@ -11,14 +12,17 @@ from project_dashboard.repositories.user_repository import UserRepository
 
 
 class AuthService:
-    def __init__(self, user_repository: UserRepository):
+    def __init__(self, user_repository: UserRepository, session: AsyncSession):
         self.user_repository = user_repository
+        self.session = session
 
     async def register(self, email: EmailStr, password: str) -> User:
         existing = await self.user_repository.get_by_email(email)
         if existing:
             raise ConflictError("Email is already taken.")
-        return await self.user_repository.create(email, hash_password(password))
+        user = await self.user_repository.create(email, hash_password(password))
+        await self.session.commit()
+        return user
 
     async def authenticate(self, email: EmailStr, password: str) -> str:
         user = await self.user_repository.get_by_email(email)

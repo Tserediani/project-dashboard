@@ -74,6 +74,7 @@ class DocumentService:
             content_type=content_type,
             size_bytes=size_bytes,
         )
+        await self.session.commit()
         return document
 
     async def get_download_url(

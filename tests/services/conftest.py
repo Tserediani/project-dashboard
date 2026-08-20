@@ -12,6 +12,7 @@ from project_dashboard.repositories.project_access_repository import (
 )
 from project_dashboard.repositories.project_repository import ProjectRepository
 from project_dashboard.repositories.user_repository import UserRepository
+from project_dashboard.services.auth_service import AuthService
 from project_dashboard.services.document_service import DocumentService
 from project_dashboard.services.project_service import ProjectService
 
@@ -37,12 +38,18 @@ def user_repo() -> AsyncMock:
 
 
 @pytest.fixture
+def auth_service(user_repo: AsyncMock, session: AsyncMock) -> AuthService:
+    return AuthService(user_repository=user_repo, session=session)
+
+
+@pytest.fixture
 def project_service(
     project_repo: AsyncMock,
     project_access_repo: AsyncMock,
     user_repo: AsyncMock,
+    session: AsyncMock,
 ) -> ProjectService:
-    return ProjectService(project_repo, user_repo, project_access_repo)
+    return ProjectService(project_repo, user_repo, project_access_repo, session=session)
 
 
 @pytest.fixture
