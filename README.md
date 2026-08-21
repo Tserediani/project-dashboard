@@ -35,7 +35,7 @@ Built with **FastAPI**, **PostgreSQL** (using asynchronous **SQLAlchemy 2.0**), 
 | **Validation** | **Pydantic v2** | Highly performant data parsing, serialization, and settings management. |
 | **Testing** | **pytest** + **pytest-asyncio** + **httpx** | Async-first testing suites with isolated test database teardowns. |
 | **Package Manager** | **uv** | Modern, blazingly fast Python package management and virtual environment tooling. |
-| **CI/CD** | **GitHub Actions** → **Docker** → **AWS** | Fully automated build, lint, test, and deployment workflows. |
+| **CI** | **GitHub Actions** | Fully automated, lint and test |
 
 ---
 
@@ -63,7 +63,6 @@ graph TD
     Services --> Repositories[Data Repositories <br> SQLAlchemy Queries Only]
     Repositories --> DB[(PostgreSQL Database)]
     Services --> S3[aioboto3 <br> AWS S3 Storage]
-
 
 ```
 
@@ -197,7 +196,6 @@ Ensure you have the following installed locally:
 *   **Docker & Docker Compose**
 *   **[uv](https://docs.astral.sh/uv/)** (highly recommended Astral package manager)
 *   **AWS S3 credentials** (or a local S3-compatible service / `moto` mock for test configurations)
-
 ---
 
 ### Setup Instructions
@@ -275,7 +273,7 @@ uv run mypy src
 
 ---
 
-## 🌀 CI/CD Pipeline
+## 🌀 CI Pipeline
 
 On every Push or Pull Request to the repository, a **GitHub Actions** workflow runs automatically:
 1.  Sets up the build environment and installs dependencies using `uv`.
@@ -283,7 +281,6 @@ On every Push or Pull Request to the repository, a **GitHub Actions** workflow r
 3.  Evaluates type systems with `mypy`.
 4.  Spins up a temporary Postgres container service and runs the entire test suite.
 
-**Deployment**: On a successful merge to the `main` branch, the build pipeline automatically packages the service into a Docker container and deploys it straight to AWS.
 
 ---
 
